@@ -1,6 +1,12 @@
 name: ci
 
 on:
+  workflow_dispatch:
+    inputs:
+      docker_tag:
+        description: Descriptive name of the devcontainer for the Docker tag
+        required: true
+        type: string
   push:
     branches:
       - main
@@ -105,6 +111,15 @@ jobs:
         with:
           version: "2.15.05"
       - run: cargo build --target x86_64-pc-windows-msvc --bins
+      - name: Copy binaries to artifact directory
+        run: |
+          mkdir -p windows-bins
+          Get-ChildItem -Path target\x86_64-pc-windows-msvc\debug\*.exe | Copy-Item -Destination windows-bins\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-msvc-bins
+          path: windows-bins
 
   # This job is used to ensure the built katana image doesn't depend on any
   # libraries that don't exist in the base docker image we use for distribution
